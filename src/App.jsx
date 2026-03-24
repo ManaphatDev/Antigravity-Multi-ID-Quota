@@ -252,6 +252,15 @@ export default function App() {
 
   useEffect(() => {
     handleRefresh();
+    
+    // Auto-refresh data silently every 30 seconds for real-time feel
+    const interval = setInterval(() => {
+      fetch('/api/accounts/refresh', { method: 'POST' })
+        .then(() => fetchAccounts(false)) // false = don't show loading spinner
+        .catch(err => console.error('Auto-refresh failed:', err));
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   return (
