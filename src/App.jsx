@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Settings, RefreshCw, Plus, AlertCircle, CheckCircle2, User, ChevronRight, BarChart2, Zap, X } from 'lucide-react';
+import { Settings, RefreshCw, Plus, AlertCircle, CheckCircle2, User, ChevronRight, BarChart2, Zap, X, Trash2 } from 'lucide-react';
 
 // --- Minimalist Components ---
 
@@ -120,7 +120,7 @@ const SkeletonCard = () => (
 );
 
 // Account Card
-const AccountCard = ({ account }) => {
+const AccountCard = ({ account, onDelete }) => {
   const isWarning = account.status === 'warning' || account.status === 'error';
   
   return (
@@ -151,8 +151,16 @@ const AccountCard = ({ account }) => {
             </div>
           </div>
         </div>
-        <button className="text-neutral-500 hover:text-white transition-colors pt-1">
-          <Settings size={14} />
+        <button 
+          onClick={() => {
+            if(window.confirm('Are you sure you want to remove this account?')) {
+              onDelete(account.id);
+            }
+          }}
+          className="text-neutral-500 hover:text-red-400 transition-colors pt-1"
+          title="Delete Account"
+        >
+          <Trash2 size={14} />
         </button>
       </div>
 
@@ -220,6 +228,17 @@ export default function App() {
       await fetchAccounts(true);
     } catch (err) {
       console.error('Refresh failed:', err);
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleDeleteAccount = async (id) => {
+    try {
+      setIsRefreshing(true);
+      await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
+      await fetchAccounts(true);
+    } catch (err) {
+      console.error('Delete failed:', err);
       setIsRefreshing(false);
     }
   };
@@ -337,7 +356,7 @@ export default function App() {
               </>
             ) : (
               accounts.map((acc) => (
-                <AccountCard key={acc.id} account={acc} />
+                <AccountCard key={acc.id} account={acc} onDelete={handleDeleteAccount} />
               ))
             )}
           </div>
