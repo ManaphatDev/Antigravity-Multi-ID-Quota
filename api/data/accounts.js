@@ -1,5 +1,11 @@
-import { kv } from '@vercel/kv';
 import 'dotenv/config';
+import { createClient } from '@vercel/kv';
+
+// Initialize the KV client pointing to Upstash Redis
+const kv = createClient({
+  url: process.env.KV_REST_API_URL || '',
+  token: process.env.KV_REST_API_TOKEN || '',
+});
 
 // Shared data store for accounts
 // Now using @vercel/kv (Upstash Redis) for persistent storage

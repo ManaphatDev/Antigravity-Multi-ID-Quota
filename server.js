@@ -1,6 +1,7 @@
 // Local dev server ที่จำลอง Vercel serverless functions
 // ใช้ตอน development เท่านั้น — บน Vercel จะใช้ serverless functions โดยตรง
 
+import 'dotenv/config';
 import http from 'http';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
