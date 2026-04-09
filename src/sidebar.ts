@@ -41,6 +41,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     this.quotaManager.forceScan();
                     vscode.window.showInformationMessage('Syncing quota from language server...');
                     break;
+                case 'openSettings':
+                    vscode.commands.executeCommand('workbench.action.openSettings', 'agq');
+                    break;
                 case 'updatePins':
                     // Save pins to globalState so statusBar can read them
                     this.context.globalState.update('agq.pinnedModels', message.pins);
@@ -175,6 +178,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 <div class="actions">
                     <button class="btn btn-primary" onclick="openDashboard()">Full Dashboard</button>
                     <button class="btn btn-secondary" onclick="forceRefresh()">↺ Refresh</button>
+                    <button class="btn btn-secondary" onclick="openSettings()" title="Settings">⚙️</button>
                 </div>
                 <script>
                     const vscode = acquireVsCodeApi();
@@ -182,6 +186,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
                     function openDashboard() { vscode.postMessage({ command: 'openDashboard' }); }
                     function forceRefresh() { vscode.postMessage({ command: 'forceRefresh' }); }
+                    function openSettings() { vscode.postMessage({ command: 'openSettings' }); }
 
                     function togglePin(key) {
                         const idx = pinned.indexOf(key);

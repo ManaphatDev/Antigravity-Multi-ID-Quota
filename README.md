@@ -2,12 +2,12 @@
 
 **Monitor your Antigravity AI quota usage in real-time — fully standalone, no dependencies required.**
 
-![Version](https://img.shields.io/badge/version-1.0.9-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![VS Code](https://img.shields.io/badge/VS%20Code-1.85+-green)
 ![License](https://img.shields.io/badge/license-MIT-success)
-![Status](https://img.shields.io/badge/status-Standalone-blueviolet)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blueviolet)
 
-> 💡 **New in v1.0.9:** Introducing **Model Pinning**! Pin your most used models in the sidebar to keep them permanently visible in your VS Code Status Bar with clean, short names and color-coded status indicators.
+> 💡 **New in v1.1.0:** Dashboard Theme Switcher (Classic / VS Code / Vibrant), Usage Sparkline Graphs, Smart Notifications with customizable sound, and full Cross-Platform Support (Linux & macOS)!
 
 ---
 
@@ -21,22 +21,18 @@ It works by scanning running **Antigravity Language Server** processes, extracti
 
 ## ✨ Features
 
-### 📌 Model Pinning (New!)
+### 📌 Model Pinning
 Keep track of the models you care about the most:
 
 <div align="center">
   <img src="media/sidebar-pinned.png" alt="Pinned Models Screenshot" width="300" />
 </div>
 
-- **Pin from Sidebar:** Click the star icon (☆ / ★) next to any model in the Antigravity sidebar panel.
+- **Pin from Sidebar:** Click the star icon (☆ / ★) next to any model.
 - **Smart Status Bar:** Pinned models instantly appear in the bottom-right Status Bar.
-- **Clean Naming:** Model names are intelligently shortened (e.g., `Gemini 3.1 Pro (High)` becomes `Pro (High)`).
-- **Color-Coded Status:** 
-  - ✅ Green (≥ 50% remaining)
-  - ⚠️ Yellow (20% - 49% remaining)
-  - ❌ Red (< 20% remaining)
-  - *Example:* `✅ Pro (High): 80% | ❌ Sonnet: 0%`
-- **Dynamic Reordering:** Pinned models are automatically moved to a dedicated "📌 PINNED" section at the top of the sidebar for easy access.
+- **Clean Naming:** Model names are intelligently shortened (e.g., `Gemini 3.1 Pro (High)` → `Pro (High)`).
+- **Color-Coded Status:** ✅ Green (≥ 50%) · ⚠️ Yellow (20-49%) · ❌ Red (< 20%)
+- **Dynamic Reordering:** Pinned models move to a dedicated "📌 PINNED" section at the top.
 
 ### 📊 Multi-Account Dashboard
 
@@ -44,28 +40,40 @@ Keep track of the models you care about the most:
   <img src="media/dashboard.png" alt="Dashboard Screenshot" width="700" />
 </div>
 
-- Supports **multiple accounts simultaneously** — each account gets its own tab in the full dashboard.
+- Supports **multiple accounts simultaneously** — each account gets its own tab.
 - Displays live **quota percentage** per AI model with interactive circular gauges.
 - Shows raw **tier name** directly from the API (e.g., `TEAMS_TIER_PRO`, `Google AI Pro`).
 - Displays **reset time** countdowns per model.
 
-### 🔌 Native Process Scanner
-- Detects running Antigravity Language Server instances automatically.
-- Extracts runtime port and CSRF token from process arguments.
-- Communicates securely with the internal API locally.
+### 🎨 Dashboard Themes (New!)
+Switch between three visual styles via the theme switcher in the dashboard:
+- 🌙 **Classic Dark** — Sleek purple-toned premium design
+- 🖥️ **VS Code Native** — Follows your active VS Code theme automatically
+- ✨ **Vibrant** — Bold neon blue-green tones for maximum visibility
+
+### 📈 Usage Analytics (New!)
+- **Sparkline graphs** show 24-hour usage trends beneath each model's gauge
+- Auto-records data efficiently (only logs when percentage changes, or every 1 hour)
+
+### 🔔 Smart Notifications (New!)
+- Automatic alerts when quota **drops below threshold** (customizable in Settings)
+- Good news notification when quota **resets back**
+- Anti-spam protection (won't re-notify until state actually changes)
+
+### 🔌 Cross-Platform (New!)
+- **Windows:** `netstat` + `wmic`
+- **macOS / Linux:** `ps` + `lsof`
 
 ---
 
 ## 🚀 How to Use
 
-1. **Open the Sidebar:** Click the Antigravity Quota icon in the VS Code Activity Bar (left/right side).
-2. **View Accounts:** If multiple accounts are logged into the language server, you'll see them listed.
-3. **Pin Models:** 
-   - Hover over a model and click the **Star Icon (☆)** to pin it.
-   - The model will move to the "📌 PINNED" section.
-   - Look at the bottom-right of your VS Code window — your **Status Bar** will immediately update to show the pinned model's live quota!
-4. **Open Full Dashboard:** Click the "Full Dashboard" button in the sidebar (or run the `AGQ: Open Quota Dashboard` command) for large, detailed visual gauges and alternative offline accounts.
-5. **Force Refresh:** Click "↺ Refresh" in the sidebar if you need an immediate sync from the language server.
+1. **Open the Sidebar:** Click the Antigravity Quota icon in the VS Code Activity Bar.
+2. **View Accounts:** Multiple accounts are listed automatically.
+3. **Pin Models:** Click the **Star Icon (☆)** → model moves to "📌 PINNED" and appears in the Status Bar.
+4. **Open Full Dashboard:** Click "Full Dashboard" or run `AGQ: Open Quota Dashboard`.
+5. **Switch Themes:** Use the theme switcher buttons at the top-right of the Dashboard.
+6. **Force Refresh:** Click "↺ Refresh" in the sidebar.
 
 ---
 
@@ -95,12 +103,20 @@ Then install the generated `.vsix` file.
 
 ---
 
+## ⚙️ Settings
+
+| Property | Default | Description |
+|---|---|---|
+| `agq.enableNotifications` | `true` | Enable/disable quota alerts when running low or after reset |
+| `agq.notificationWarningThreshold` | `20` | Percentage below which a warning notification is triggered |
+
+---
 
 ## 📋 Requirements
 
-- **OS:** Windows (currently relies on `netstat` + `wmic` for local process scanning).
-- **IDE:** VS Code `1.85+` or compatible IDE.
-- **Prerequisite:** You must have the main Antigravity extension installed and be **logged in**. The language server process must be running for AGQ to detect it.
+- **OS:** Windows, macOS, or Linux
+- **IDE:** VS Code `1.85+` or compatible IDE
+- **Prerequisite:** Antigravity extension installed and **logged in**
 
 ---
 

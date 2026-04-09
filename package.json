@@ -1,8 +1,8 @@
 {
   "name": "antigravity-multi-id-quota",
   "displayName": "Antigravity Multi-ID Quota",
-  "description": "🚀 Monitor your AI coding assistant quota usage in real-time. Track requests, tokens, and remaining capacity for Gemini & other AI models.",
-  "version": "1.0.9",
+  "description": "🚀 Real-time AI quota dashboard for Antigravity — multi-account monitoring, model pinning, sparkline analytics, smart alerts & cross-platform support (Win/Mac/Linux).",
+  "version": "1.1.0",
   "publisher": "ManaphatDev",
   "license": "MIT",
   "repository": {
@@ -91,7 +91,14 @@
         "agq.enableNotifications": {
           "type": "boolean",
           "default": true,
-          "description": "Show notifications when quota thresholds are reached"
+          "description": "Enable/disable quota alerts when running low or after reset"
+        },
+        "agq.notificationWarningThreshold": {
+          "type": "number",
+          "default": 20,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Percentage below which a warning notification is triggered (default: 20%)"
         }
       }
     },
