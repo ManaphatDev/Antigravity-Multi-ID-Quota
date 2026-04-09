@@ -2,7 +2,7 @@
   "name": "antigravity-multi-id-quota",
   "displayName": "Antigravity Multi-ID Quota",
   "description": "🚀 Monitor your AI coding assistant quota usage in real-time. Track requests, tokens, and remaining capacity for Gemini & other AI models.",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "publisher": "ManaphatDev",
   "license": "MIT",
   "repository": {

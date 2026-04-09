@@ -24,13 +24,7 @@ export class StatusBarController {
         const activeAccount = data.accounts[data.activeEmail];
         let lowestPercent = 100;
 
-        let formattedTier = activeAccount.tier || 'Free';
-        if (formattedTier.startsWith('TEAMS_TIER_')) {
-            const suffix = formattedTier.replace('TEAMS_TIER_', '');
-            formattedTier = 'TEAMS_TIER_' + suffix.charAt(0).toUpperCase() + suffix.slice(1).toLowerCase();
-        } else if (formattedTier) {
-            formattedTier = formattedTier.charAt(0).toUpperCase() + formattedTier.slice(1).toLowerCase();
-        }
+        let formattedTier = activeAccount.tier || 'Unknown';
 
         const md = new vscode.MarkdownString();
         md.isTrusted = true;

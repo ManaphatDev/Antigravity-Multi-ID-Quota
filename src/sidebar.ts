@@ -54,13 +54,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             contentHtml = accounts.map(acc => {
                 const isActive = acc.email === data.activeEmail;
                 
-                let formattedTier = acc.tier || 'Free';
-                if (formattedTier.startsWith('TEAMS_TIER_')) {
-                    const suffix = formattedTier.replace('TEAMS_TIER_', '');
-                    formattedTier = 'TEAMS_TIER_' + suffix.charAt(0).toUpperCase() + suffix.slice(1).toLowerCase();
-                } else if (formattedTier) {
-                    formattedTier = formattedTier.charAt(0).toUpperCase() + formattedTier.slice(1).toLowerCase();
-                }
+                let formattedTier = acc.tier || 'Unknown';
 
                 const modelsHtml = acc.models.map(m => `
                     <div class="model-item">

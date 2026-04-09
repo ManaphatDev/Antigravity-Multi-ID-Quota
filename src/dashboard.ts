@@ -213,9 +213,11 @@ function switchTab(idx){
     }
 
     private _tierLabel(tier: string): string {
-        if (tier.includes('PRO')) return 'Pro';
-        if (tier.includes('FREE')) return 'Free';
-        if (tier.includes('TEAM')) return 'Team';
+        const t = tier.toUpperCase();
+        if (t.includes('TEAM')) return 'Team Pro';
+        if (t.includes('PRO')) return 'Pro';
+        if (t.includes('FREE')) return 'Free';
+        if (t.includes('ENTERPRISE')) return 'Enterprise';
         return tier;
     }
 
