@@ -13,6 +13,7 @@ export interface NativeModelQuota {
     name: string;
     percentage: number;
     resetIn: string;
+    resetTimestamp: number;  // epoch ms — for live countdown
     history: HistoryPoint[];
 }
 
@@ -114,8 +115,18 @@ export class QuotaManager {
                 if (prev && prev.level === currentLevel) continue;
 
                 if (currentLevel === 'empty' && (!prev || prev.level !== 'empty')) {
+                    let suggestion = '';
+                    for (const otherEmail of Object.keys(this.data.accounts)) {
+                        if (otherEmail === email) continue;
+                        const otherModel = this.data.accounts[otherEmail].models.find(m => m.name === model.name);
+                        if (otherModel && otherModel.percentage >= 50) {
+                            suggestion = `\n💡 Suggestion: Switch to ${otherEmail} (${otherModel.percentage}%)`;
+                            break;
+                        }
+                    }
+
                     vscode.window.showErrorMessage(
-                        `🔴 Quota depleted! ${model.name} (${email}) — 0% remaining`,
+                        `🔴 Quota depleted! ${model.name} (${email}) — 0% remaining${suggestion}`,
                         'Open Dashboard'
                     ).then(choice => {
                         if (choice === 'Open Dashboard') {
@@ -123,9 +134,24 @@ export class QuotaManager {
                         }
                     });
                 } else if (currentLevel === 'warning' && (!prev || prev.level === 'ok')) {
+                    let suggestion = '';
+                    for (const otherEmail of Object.keys(this.data.accounts)) {
+                        if (otherEmail === email) continue;
+                        const otherModel = this.data.accounts[otherEmail].models.find(m => m.name === model.name);
+                        if (otherModel && otherModel.percentage >= 80) {
+                            suggestion = `\n💡 Hint: ${otherEmail} has ${otherModel.percentage}% available!`;
+                            break;
+                        }
+                    }
+
                     vscode.window.showWarningMessage(
-                        `⚠️ Quota running low! ${model.name} (${email}) — ${model.percentage}% remaining`
-                    );
+                        `⚠️ Quota running low! ${model.name} (${email}) — ${model.percentage}% remaining${suggestion}`,
+                        'Open Dashboard'
+                    ).then(choice => {
+                        if (choice === 'Open Dashboard') {
+                            vscode.commands.executeCommand('agq.openDashboard');
+                        }
+                    });
                 } else if (currentLevel === 'ok' && prev && (prev.level === 'empty' || prev.level === 'critical')) {
                     vscode.window.showInformationMessage(
                         `✅ Quota restored! ${model.name} (${email}) — ${model.percentage}%`
@@ -229,10 +255,13 @@ export class QuotaManager {
         const clientConfigs = userStatus.cascadeModelConfigData?.clientModelConfigs || [];
         for (const config of clientConfigs) {
             if (config.quotaInfo) {
+                const resetDate = new Date(config.quotaInfo.resetTime);
+                const resetTs = Number.isNaN(resetDate.getTime()) ? 0 : resetDate.getTime();
                 models.push({
                     name: config.label || config.modelOrAlias?.model || 'Unknown Model',
                     percentage: Math.round((config.quotaInfo.remainingFraction ?? 0) * 100),
                     resetIn: this.formatResetTime(config.quotaInfo.resetTime),
+                    resetTimestamp: resetTs,
                     history: []  // Will be populated by recordHistory
                 });
             }

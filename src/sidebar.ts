@@ -89,7 +89,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                         <div class="progress-bar">
                             <div class="progress-fill ${colorClass}" style="width: ${m.percentage}%"></div>
                         </div>
-                        <div class="reset-time">⏱ Resets in ${m.resetIn}</div>
+                        <div class="reset-time" data-reset="${m.resetTimestamp || 0}">⏱ Resets in ${m.resetIn}</div>
                     </div>`;
                 }).join('');
 
@@ -236,6 +236,29 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     }
 
                     renderPins();
+
+                    function fmtCountdown(ms) {
+                        if (ms <= 0) return 'Available';
+                        const m = Math.floor(ms / 60000);
+                        if (m < 60) return m + ' min';
+                        const d = Math.floor(m / 1440);
+                        const h = Math.floor((m % 1440) / 60);
+                        const mm = m % 60;
+                        let s = '';
+                        if (d > 0) s += d + 'd ';
+                        if (h > 0) s += h + 'h ';
+                        if (mm > 0) s += mm + 'm';
+                        return s.trim();
+                    }
+                    function tickResets() {
+                        document.querySelectorAll('.reset-time[data-reset]').forEach(el => {
+                            const ts = parseInt(el.getAttribute('data-reset'));
+                            if (!ts) return;
+                            el.textContent = '⏱ Resets in ' + fmtCountdown(ts - Date.now());
+                        });
+                    }
+                    setInterval(tickResets, 1000);
+                    tickResets();
                 </script>
             </body>
             </html>`;

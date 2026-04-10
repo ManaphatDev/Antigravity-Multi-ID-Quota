@@ -92,8 +92,8 @@ export class DashboardPanel {
                     <div class="avg-ring">
                         <svg viewBox="0 0 36 36">
                             <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                            <path class="ring-fg" stroke="${this._color(avgPct)}" stroke-dasharray="${avgPct}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                            <text x="18" y="19" class="ring-num">${avgPct}%</text>
+                            <path class="ring-fg" stroke="${this._color(avgPct)}" stroke-dasharray="0, 100" data-pct="${avgPct}" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <text x="18" y="19" class="ring-num" data-val="${avgPct}">0%</text>
                             <text x="18" y="23.5" class="ring-label">AVG</text>
                         </svg>
                     </div>
@@ -205,12 +205,20 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',-apple-system,B
 .pct-label{fill:var(--tx2);font-size:3px;text-anchor:middle;text-transform:uppercase}
 .card-reset{margin-top:14px;font-size:12px;color:var(--tx2);background:rgba(255,255,255,.04);padding:5px 12px;border-radius:20px}
 
-/* Sparkline */
-.sparkline-wrap{width:100%;height:40px;margin-top:10px;position:relative;overflow:hidden}
-.sparkline-svg{width:100%;height:100%}
-.sparkline-line{fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.sparkline-area{opacity:0.15}
-.sparkline-label{font-size:9px;color:var(--tx3);text-align:center;margin-top:2px;opacity:0.6}
+/* Sparkline Chart */
+.sparkline-wrap{width:100%;margin-top:12px;position:relative}
+.chart-container{position:relative;width:100%;height:80px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid rgba(255,255,255,.06);overflow:visible}
+.chart-svg{width:100%;height:100%;display:block}
+.chart-grid{stroke:rgba(255,255,255,.06);stroke-width:0.5}
+.chart-line{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px rgba(255,255,255,.2))}
+.chart-area{opacity:0.1}
+.chart-dot{stroke-width:2;transition:r .15s}
+.chart-dot:hover{r:5 !important}
+.chart-axis{font-size:8px;fill:var(--tx3);opacity:0.7}
+.chart-time{display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);margin-top:4px;opacity:0.5;padding:0 2px}
+.sparkline-label{font-size:10px;color:var(--tx2);text-align:center;margin-top:4px;opacity:0.7}
+.chart-tooltip{position:absolute;background:var(--surface);border:1px solid var(--bdr);border-radius:4px;padding:3px 7px;font-size:10px;color:var(--tx);pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;z-index:10}
+
 
 .empty{text-align:center;padding:80px 40px}
 .empty-icon{font-size:48px;margin-bottom:16px}
@@ -241,6 +249,50 @@ function setTheme(name){
     document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('theme-'+name)?.classList.add('active');
 }
+function fmtCountdown(ms) {
+    if (ms <= 0) return 'Available';
+    const m = Math.floor(ms / 60000);
+    if (m < 60) return m + ' min';
+    const d = Math.floor(m / 1440);
+    const h = Math.floor((m % 1440) / 60);
+    const mm = m % 60;
+    let s = '';
+    if (d > 0) s += d + 'd ';
+    if (h > 0) s += h + 'h ';
+    if (mm > 0) s += mm + 'm';
+    return s.trim();
+}
+function tickCountdowns() {
+    document.querySelectorAll('.card-reset[data-reset]').forEach(el => {
+        const ts = parseInt(el.getAttribute('data-reset'));
+        if (!ts) return;
+        el.textContent = '⏳ ' + fmtCountdown(ts - Date.now());
+    });
+}
+setInterval(tickCountdowns, 1000);
+tickCountdowns();
+
+// Dashboard Animations
+setTimeout(() => {
+    document.querySelectorAll('.ring-fg').forEach(el => {
+        el.setAttribute('stroke-dasharray', el.getAttribute('data-pct') + ', 100');
+    });
+    document.querySelectorAll('.pct-text, .ring-num').forEach(el => {
+        const target = parseInt(el.getAttribute('data-val') || '0');
+        if (target === 0) return;
+        let current = 0;
+        const inc = target / 30; // 30 frames
+        const to = setInterval(() => {
+            current += inc;
+            if (current >= target) {
+                el.textContent = target + '%';
+                clearInterval(to);
+            } else {
+                el.textContent = Math.round(current) + '%';
+            }
+        }, 20);
+    });
+}, 50);
 </script>
 </body></html>`;
     }
@@ -252,12 +304,12 @@ function setTheme(name){
             <div class="card-name">${m.name}</div>
             <svg viewBox="0 0 36 36" class="card-svg">
                 <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                <path class="ring-fg" stroke="${c}" stroke-dasharray="${m.percentage}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                <text x="18" y="19" class="pct-text">${m.percentage}%</text>
+                <path class="ring-fg" stroke="${c}" stroke-dasharray="0, 100" data-pct="${m.percentage}" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <text x="18" y="19" class="pct-text" data-val="${m.percentage}">0%</text>
                 <text x="18" y="24" class="pct-label">remaining</text>
             </svg>
             ${sparkline}
-            <div class="card-reset">⏳ ${m.resetIn}</div>
+            <div class="card-reset" data-reset="${m.resetTimestamp || 0}">⏳ ${m.resetIn}</div>
         </div>`;
     }
 
@@ -266,32 +318,58 @@ function setTheme(name){
             return `<div class="sparkline-wrap"><div class="sparkline-label">📊 Collecting data...</div></div>`;
         }
 
-        const width = 200;
-        const height = 36;
-        const padding = 2;
+        const width = 240;
+        const height = 80;
+        const padL = 32; // left padding for Y axis labels
+        const padR = 6;
+        const padT = 6;
+        const padB = 4;
+        const chartW = width - padL - padR;
+        const chartH = height - padT - padB;
 
         const minTime = history[0].timestamp;
         const maxTime = history[history.length - 1].timestamp;
         const timeRange = maxTime - minTime || 1;
 
+        // Map data to chart coordinates
         const points = history.map(h => {
-            const x = padding + ((h.timestamp - minTime) / timeRange) * (width - padding * 2);
-            const y = padding + ((100 - h.percentage) / 100) * (height - padding * 2);
-            return { x, y };
+            const x = padL + ((h.timestamp - minTime) / timeRange) * chartW;
+            const y = padT + ((100 - h.percentage) / 100) * chartH;
+            return { x, y, pct: h.percentage, time: h.timestamp };
         });
 
-        const linePoints = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-        // Area fill: close path along bottom
-        const areaPoints = linePoints + ` ${points[points.length - 1].x.toFixed(1)},${height} ${points[0].x.toFixed(1)},${height}`;
+        // Grid lines at 100%, 50%, 0%
+        const gridLines = [0, 50, 100].map(pct => {
+            const y = padT + ((100 - pct) / 100) * chartH;
+            return `<line class="chart-grid" x1="${padL}" y1="${y.toFixed(1)}" x2="${width - padR}" y2="${y.toFixed(1)}"/>
+                    <text class="chart-axis" x="${padL - 4}" y="${(y + 3).toFixed(1)}" text-anchor="end">${pct}%</text>`;
+        }).join('');
 
-        const hoursAgo = Math.round((maxTime - minTime) / 3600000);
-        const label = hoursAgo > 0 ? `Last ${hoursAgo}h trend` : 'Recent trend';
+        // Line & area
+        const linePoints = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+        const areaPoints = linePoints + ` ${points[points.length - 1].x.toFixed(1)},${padT + chartH} ${points[0].x.toFixed(1)},${padT + chartH}`;
+
+        // Latest data point dot only (avoids clutter when multiple rapid changes occur)
+        const lastP = points[points.length - 1];
+        const dots = `<circle class="chart-dot" cx="${lastP.x.toFixed(1)}" cy="${lastP.y.toFixed(1)}" r="3" fill="${color}" stroke="var(--card)"/>`;
+
+        // Time labels
+        const startDate = new Date(minTime);
+        const endDate = new Date(maxTime);
+        const fmt = (d: Date) => d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        const hoursAgo = Math.round(timeRange / 3600000);
+        const label = hoursAgo > 0 ? `📈 ${hoursAgo}h trend · ${history.length} data points` : `📈 Recent trend · ${history.length} pts`;
 
         return `<div class="sparkline-wrap">
-            <svg class="sparkline-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
-                <polygon class="sparkline-area" points="${areaPoints}" fill="${color}"/>
-                <polyline class="sparkline-line" points="${linePoints}" stroke="${color}"/>
-            </svg>
+            <div class="chart-container">
+                <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+                    ${gridLines}
+                    <polygon class="chart-area" points="${areaPoints}" fill="${color}"/>
+                    <polyline class="chart-line" points="${linePoints}" stroke="${color}"/>
+                    ${dots}
+                </svg>
+            </div>
+            <div class="chart-time"><span>${fmt(startDate)}</span><span>${fmt(endDate)}</span></div>
             <div class="sparkline-label">${label}</div>
         </div>`;
     }
