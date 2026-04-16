@@ -84,7 +84,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                 </button>
                                 <span class="model-name">${m.name}</span>
                             </div>
-                            <span class="model-pct ${colorClass}-text">${m.percentage}%</span>
+                            <span class="model-pct ${colorClass}-text">${m.percentage}%${m.isOptimistic ? '<span class="sync-spin" title="Syncing...">↻</span>' : ''}</span>
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill ${colorClass}" style="width: ${m.percentage}%"></div>
@@ -157,6 +157,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     .warning { background: #f59e0b; }
                     .danger { background: #ef4444; }
                     .reset-time { font-size: 10px; opacity: 0.45; text-align: right; }
+                    .sync-spin { display: inline-block; animation: spin 1s linear infinite; font-size: 10px; opacity: 0.6; margin-left: 3px; }
+                    @keyframes spin { to { transform: rotate(360deg); } }
 
                     .pin-btn { background: none; border: none; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; opacity: 0.35; transition: opacity 0.15s, transform 0.15s; }
                     .pin-btn:hover { opacity: 1; transform: scale(1.2); }

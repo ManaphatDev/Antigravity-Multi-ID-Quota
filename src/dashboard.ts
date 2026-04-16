@@ -224,6 +224,12 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',-apple-system,B
 .empty-icon{font-size:48px;margin-bottom:16px}
 .empty-title{font-size:18px;font-weight:600;margin-bottom:8px}
 .empty-desc{font-size:13px;color:var(--tx2);max-width:450px;margin:0 auto;line-height:1.7}
+
+/* Optimistic sync badge */
+.sync-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--tx2);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);padding:2px 8px;border-radius:10px;margin-top:6px;animation:fadePulse 1.5s ease-in-out infinite}
+@keyframes fadePulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sync-spin{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style></head>
 <body>
 <div class="banner">
@@ -310,6 +316,7 @@ setTimeout(() => {
             </svg>
             ${sparkline}
             <div class="card-reset" data-reset="${m.resetTimestamp || 0}">⏳ ${m.resetIn}</div>
+            ${m.isOptimistic ? `<div class="sync-badge"><span class="sync-spin">↻</span> Syncing...</div>` : ''}
         </div>`;
     }
 

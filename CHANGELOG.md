@@ -4,6 +4,28 @@ All notable changes to **Antigravity Multi-ID Quota** will be documented in this
 
 ---
 
+## [1.1.3] — 2026-04-16
+
+### ✨ New Features
+
+#### 🔄 Instant Quota Reset Detection
+- Extension now **fetches data immediately** the moment a quota resets — no more waiting for the next 15-second poll cycle
+- A dedicated `resetTimer` is scheduled to fire at the exact `resetTimestamp` of the nearest expiring model across all accounts
+- Timer is automatically **re-armed** after every successful data save, so it always targets the next upcoming reset
+- Timer is properly **cleaned up** on `stopTracking()` to prevent memory leaks
+
+#### 🧹 Auto-Clear History on Reset
+- When a quota cycle rolls over (new `resetTimestamp` detected + old one has passed), the usage history for that model is **wiped clean**
+- Chart now starts fresh from the reset point instead of showing stale pre-reset data points
+- Prevents misleading sparkline graphs that previously showed "0% → 100%" jumps carried over from the previous cycle
+
+#### ⚡ Optimistic Reset Display
+- When a quota reset time is reached, the UI **instantly shows 100%** and **"Available"** without waiting for the API response
+- Provides immediate visual feedback — the actual API fetch runs in the background and corrects values if needed
+- Eliminates the brief "stale 0%" display that previously appeared between reset and the next successful API poll
+
+---
+
 ## [1.1.2] — 2026-04-10
 
 ### ✨ New Features

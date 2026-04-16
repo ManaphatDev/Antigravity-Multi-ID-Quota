@@ -15,6 +15,7 @@ export interface NativeModelQuota {
     resetIn: string;
     resetTimestamp: number;  // epoch ms — for live countdown
     history: HistoryPoint[];
+    isOptimistic?: boolean;  // true = value set optimistically, awaiting API confirmation
 }
 
 export interface CreditInfo {
@@ -48,6 +49,7 @@ interface NotificationState {
 export class QuotaManager {
     private data: QuotaData = { accounts: {}, activeEmail: null };
     private pollingInterval: NodeJS.Timeout | null = null;
+    private resetTimer: NodeJS.Timeout | null = null;      // fires at the next reset time
     public onChange: vscode.EventEmitter<QuotaData> = new vscode.EventEmitter<QuotaData>();
 
     // Notification spam prevention
@@ -58,13 +60,41 @@ export class QuotaManager {
     }
 
     public async startTracking() {
+        // On startup: if cached data has any model whose reset time already passed,
+        // apply optimistic 100% immediately (handles extension load-after-reset case)
+        this.applyOptimisticIfExpired();
+
         await this.fetchLocalApis();
         this.pollingInterval = setInterval(() => this.fetchLocalApis(), 15000);
+    }
+
+    private applyOptimisticIfExpired() {
+        const now = Date.now();
+        let anyExpired = false;
+
+        for (const acc of Object.values(this.data.accounts)) {
+            for (const model of acc.models) {
+                if (model.resetTimestamp > 0 && model.resetTimestamp <= now && model.percentage < 100) {
+                    model.percentage = 100;
+                    model.resetIn = 'Available';
+                    model.isOptimistic = true;
+                    anyExpired = true;
+                }
+            }
+        }
+
+        if (anyExpired) {
+            this.onChange.fire(this.data);
+        }
     }
 
     public stopTracking() {
         if (this.pollingInterval) {
             clearInterval(this.pollingInterval);
+        }
+        if (this.resetTimer) {
+            clearTimeout(this.resetTimer);
+            this.resetTimer = null;
         }
     }
 
@@ -88,6 +118,59 @@ export class QuotaManager {
         await this.context.globalState.update('agq.nativeDataV3', this.data);
         this.onChange.fire(this.data);
         this.evaluateNotifications();
+        this.scheduleNextResetFetch();   // re-arm timer after every save
+    }
+
+    // ========================
+    // Reset-time scheduler
+    // ========================
+    private scheduleNextResetFetch() {
+        // Cancel any existing reset timer
+        if (this.resetTimer) {
+            clearTimeout(this.resetTimer);
+            this.resetTimer = null;
+        }
+
+        const now = Date.now();
+        let nearestReset = Infinity;
+
+        // Find the soonest resetTimestamp across all accounts & models
+        for (const acc of Object.values(this.data.accounts)) {
+            for (const model of acc.models) {
+                if (model.resetTimestamp > now && model.resetTimestamp < nearestReset) {
+                    nearestReset = model.resetTimestamp;
+                }
+            }
+        }
+
+        if (nearestReset === Infinity) return;  // nothing to schedule
+
+        const delay = nearestReset - now;
+        // Cap at ~24h to avoid timer overflow; polling will re-arm if needed.
+        const MAX_DELAY = 24 * 60 * 60 * 1000;
+        if (delay > MAX_DELAY) return;
+
+        this.resetTimer = setTimeout(async () => {
+            this.resetTimer = null;
+
+            // Optimistically set expired models to 100% immediately
+            const resetNow = Date.now();
+            for (const acc of Object.values(this.data.accounts)) {
+                for (const model of acc.models) {
+                    if (model.resetTimestamp > 0 && model.resetTimestamp <= resetNow) {
+                        model.percentage = 100;
+                        model.resetIn = 'Available';
+                        model.isOptimistic = true;  // mark as pending API confirmation
+                    }
+                }
+            }
+            // Fire UI update immediately so panels show 100% + syncing indicator
+            this.onChange.fire(this.data);
+
+            // Hold optimistic state for at least 2s so the syncing indicator is visible
+            await new Promise(r => setTimeout(r, 2000));
+            await this.fetchLocalApis();   // then fetch real data (clears isOptimistic)
+        }, delay);
     }
 
     // ========================
@@ -174,6 +257,22 @@ export class QuotaManager {
             // Find existing model to carry over history
             const existing = existingModels?.find(m => m.name === model.name);
             const prevHistory = existing?.history || [];
+
+            // ── Auto-reset detection ──────────────────────────────────────────
+            // If the stored resetTimestamp has changed AND the old one is now
+            // in the past, it means the quota just cycled → wipe history clean.
+            const oldResetTs = existing?.resetTimestamp ?? 0;
+            const newResetTs = model.resetTimestamp;
+            const quotaJustReset = oldResetTs > 0
+                && newResetTs !== oldResetTs
+                && oldResetTs <= now;
+
+            if (quotaJustReset) {
+                // Fresh slate after reset
+                model.history = [{ timestamp: now, percentage: model.percentage }];
+                continue;
+            }
+            // ─────────────────────────────────────────────────────────────────
 
             // Prune old data (older than 24h)  
             const prunedHistory = prevHistory.filter(h => (now - h.timestamp) < maxAge);
@@ -262,7 +361,8 @@ export class QuotaManager {
                     percentage: Math.round((config.quotaInfo.remainingFraction ?? 0) * 100),
                     resetIn: this.formatResetTime(config.quotaInfo.resetTime),
                     resetTimestamp: resetTs,
-                    history: []  // Will be populated by recordHistory
+                    history: [],  // Will be populated by recordHistory
+                    isOptimistic: false  // real API data — confirmed
                 });
             }
         }
