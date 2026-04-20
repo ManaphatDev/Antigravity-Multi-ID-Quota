@@ -11,6 +11,15 @@ export class DashboardPanel {
         this._update();
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
         this.quotaManager.onChange.event(() => this._update(), null, this._disposables);
+        
+        this._panel.webview.onDidReceiveMessage(async (message) => {
+            const config = vscode.workspace.getConfiguration('agq');
+            if (message.command === 'setTheme') {
+                await config.update('dashboardTheme', message.theme, true);
+            } else if (message.command === 'saveCustomColor') {
+                await config.update(`customTheme.${message.key}`, message.value, true);
+            }
+        }, null, this._disposables);
     }
 
     public static createOrShow(extensionUri: vscode.Uri, quotaManager: QuotaManager) {
@@ -38,6 +47,23 @@ export class DashboardPanel {
     }
 
     private _getHtml(data: QuotaData): string {
+        const config = vscode.workspace.getConfiguration('agq');
+        const theme = config.get<string>('dashboardTheme', 'classic');
+        const customBg = config.get<string>('customTheme.background', '#0f172a');
+        const customCard = config.get<string>('customTheme.card', '#1e293b');
+        const customAccent = config.get<string>('customTheme.accent', '#38bdf8');
+        const customTx = config.get<string>('customTheme.textPrimary', '#f8fafc');
+        const customTx2 = config.get<string>('customTheme.textSecondary', '#94a3b8');
+
+        const customStyle = `
+[data-theme="custom"] {
+    --bg:${customBg}; --surface:${customBg}; --card:${customCard}; --card-h:${customBg}; --bdr:${customCard};
+    --tx:${customTx}; --tx2:${customTx2}; --tx3:${customTx2};
+    --accent:${customAccent}; --green:#10b981; --yellow:#f59e0b; --red:#ef4444;
+    --r:12px;
+    --banner-bg:${customCard}; --banner-bdr:${customAccent}; --tab-bg:${customBg};
+}`;
+
         const accounts = Object.values(data.accounts || {});
         accounts.sort((a, b) => a.email === data.activeEmail ? -1 : b.email === data.activeEmail ? 1 : a.email.localeCompare(b.email));
 
@@ -111,7 +137,7 @@ export class DashboardPanel {
                Data will appear here once an account is active.</div></div>` : '';
 
         return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en" data-theme="${theme}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>AGQ Multi-ID Dashboard</title>
 <style>
 /* ===== Theme System ===== */
@@ -143,12 +169,14 @@ export class DashboardPanel {
     --banner-bdr:rgba(0,212,255,.2);
     --tab-bg:#0f0f2a;
 }
+${customStyle}
 
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif}
 
 .banner{background:var(--banner-bg);padding:32px 40px 20px;border-bottom:1px solid var(--banner-bdr);display:flex;justify-content:space-between;align-items:flex-start}
 .banner-left{}
+.banner-right{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
 .banner h1{font-size:22px;font-weight:700;background:linear-gradient(90deg,#818cf8,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
 [data-theme="vibrant"] .banner h1{background:linear-gradient(90deg,#00d4ff,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .banner .sub{font-size:13px;color:var(--tx2)}
@@ -230,6 +258,74 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',-apple-system,B
 @keyframes fadePulse{0%,100%{opacity:1}50%{opacity:.4}}
 .sync-spin{display:inline-block;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* Drain Rate Badge */
+.drain-badge {
+    position: absolute;
+    top: -12px;
+    right: 6px;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 5;
+    border: 1px solid var(--bdr);
+    letter-spacing: 0.2px;
+    backdrop-filter: blur(4px);
+}
+.drain-active {
+    color: #fb7185;
+    border-color: rgba(251, 113, 133, 0.3);
+    background: rgba(251, 113, 133, 0.08);
+}
+.drain-stable {
+    color: #34d399;
+    border-color: rgba(52, 211, 153, 0.3);
+    background: rgba(52, 211, 153, 0.08);
+}
+.drain-icon { font-size: 11px; opacity: 0.9; }
+
+/* Custom Palette */
+.custom-palette {
+    display: none;
+    padding: 12px 20px;
+    background: rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+    animation: fadeIn 0.3s;
+}
+.custom-palette.show {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 20px;
+    align-items: center;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.color-group { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.color-group label {
+    font-size: 9px; font-weight: 700; color: var(--tx2); 
+    text-transform: uppercase; letter-spacing: 0.8px;
+}
+.color-picker {
+    -webkit-appearance: none;
+    border: none; width: 36px; height: 36px;
+    border-radius: 50%; cursor: pointer; background: none; padding: 0;
+    transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28), box-shadow 0.2s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+.color-picker:hover {
+    transform: scale(1.15);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
+.color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+.color-picker::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0.15); border-radius: 50%; }
 </style></head>
 <body>
 <div class="banner">
@@ -237,23 +333,72 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',-apple-system,B
         <h1>Antigravity Multi-ID Quota</h1>
         <div class="sub">Live quota data parsed directly from IDE internal API</div>
     </div>
-    <div class="theme-switcher">
-        <button class="theme-btn active" onclick="setTheme('classic')" id="theme-classic">🌙 Classic</button>
-        <button class="theme-btn" onclick="setTheme('native')" id="theme-native">🖥️ VS Code</button>
-        <button class="theme-btn" onclick="setTheme('vibrant')" id="theme-vibrant">✨ Vibrant</button>
+    <div class="banner-right">
+        <div class="theme-switcher">
+            <button class="theme-btn ${theme === 'classic' ? 'active' : ''}" onclick="setTheme('classic')" id="theme-classic">🌙 Classic</button>
+            <button class="theme-btn ${theme === 'native' ? 'active' : ''}" onclick="setTheme('native')" id="theme-native">🖥️ VS Code</button>
+            <button class="theme-btn ${theme === 'vibrant' ? 'active' : ''}" onclick="setTheme('vibrant')" id="theme-vibrant">✨ Vibrant</button>
+            <button class="theme-btn ${theme === 'custom' ? 'active' : ''}" onclick="setTheme('custom')" id="theme-custom">🎨 Custom</button>
+            <button class="theme-btn" id="btn-custom-edit" onclick="togglePalette()" style="display: ${theme === 'custom' ? 'inline-block' : 'none'}; padding: 6px 10px;" title="Toggle Custom Palette">⚙️ Edit</button>
+        </div>
+        <div class="custom-palette" id="custom-palette">
+            <div class="color-group">
+                <label>Background</label>
+                <input type="color" class="color-picker" value="${customBg}" oninput="liveUp('--bg,--surface,--tab-bg,--card-h', this.value)" onchange="saveColor('background', this.value)">
+            </div>
+            <div class="color-group">
+                <label>Card / Lines</label>
+                <input type="color" class="color-picker" value="${customCard}" oninput="liveUp('--card,--bdr,--banner-bg', this.value)" onchange="saveColor('card', this.value)">
+            </div>
+            <div class="color-group">
+                <label>Accent</label>
+                <input type="color" class="color-picker" value="${customAccent}" oninput="liveUp('--accent,--banner-bdr', this.value)" onchange="saveColor('accent', this.value)">
+            </div>
+            <div class="color-group">
+                <label>Primary Text</label>
+                <input type="color" class="color-picker" value="${customTx}" oninput="liveUp('--tx', this.value)" onchange="saveColor('textPrimary', this.value)">
+            </div>
+            <div class="color-group">
+                <label>Sub Text</label>
+                <input type="color" class="color-picker" value="${customTx2}" oninput="liveUp('--tx2,--tx3', this.value)" onchange="saveColor('textSecondary', this.value)">
+            </div>
+        </div>
     </div>
 </div>
 ${accounts.length > 0 ? `<div class="tabs">${tabsHtml}</div>` : ''}
 <div class="panels">${panelsHtml}${emptyHtml}</div>
 <script>
+const vscodeApi = acquireVsCodeApi();
 function switchTab(idx){
     document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('tab-active',i===idx));
     document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('panel-hidden',i!==idx));
 }
 function setTheme(name){
     document.documentElement.setAttribute('data-theme', name);
-    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.theme-btn:not(#btn-custom-edit)').forEach(b => b.classList.remove('active'));
     document.getElementById('theme-'+name)?.classList.add('active');
+    
+    // Toggle edit button visibility
+    const isCustom = name === 'custom';
+    document.getElementById('btn-custom-edit').style.display = isCustom ? 'inline-block' : 'none';
+    
+    if (!isCustom) {
+        document.getElementById('custom-palette').classList.remove('show');
+        ['--bg','--surface','--card','--card-h','--bdr','--tx','--tx2','--tx3','--accent','--banner-bg','--banner-bdr','--tab-bg']
+            .forEach(v => document.documentElement.style.removeProperty(v));
+    }
+    
+    vscodeApi.postMessage({ command: 'setTheme', theme: name });
+}
+function togglePalette(){
+    document.getElementById('custom-palette').classList.toggle('show');
+}
+function liveUp(varsStr, val) {
+    if (document.documentElement.getAttribute('data-theme') !== 'custom') return;
+    varsStr.split(',').forEach(v => document.documentElement.style.setProperty(v, val));
+}
+function saveColor(key, val) {
+    vscodeApi.postMessage({ command: 'saveCustomColor', key: key, value: val });
 }
 function fmtCountdown(ms) {
     if (ms <= 0) return 'Available';
@@ -272,7 +417,7 @@ function tickCountdowns() {
     document.querySelectorAll('.card-reset[data-reset]').forEach(el => {
         const ts = parseInt(el.getAttribute('data-reset'));
         if (!ts) return;
-        el.textContent = '⏳ ' + fmtCountdown(ts - Date.now());
+        el.textContent = '⏱️ Resets in ' + fmtCountdown(ts - Date.now());
     });
 }
 setInterval(tickCountdowns, 1000);
@@ -315,7 +460,7 @@ setTimeout(() => {
                 <text x="18" y="24" class="pct-label">remaining</text>
             </svg>
             ${sparkline}
-            <div class="card-reset" data-reset="${m.resetTimestamp || 0}">⏳ ${m.resetIn}</div>
+            <div class="card-reset" data-reset="${m.resetTimestamp || 0}">⏱️ Resets in ${m.resetIn}</div>
             ${m.isOptimistic ? `<div class="sync-badge"><span class="sync-spin">↻</span> Syncing...</div>` : ''}
         </div>`;
     }
@@ -364,11 +509,27 @@ setTimeout(() => {
         const startDate = new Date(minTime);
         const endDate = new Date(maxTime);
         const fmt = (d: Date) => d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        
+        // Drain Rate Calculation
+        const first = history[0];
+        const last = history[history.length - 1];
+        const pctDiff = first.percentage - last.percentage;
+        
+        let drainBadge = '';
+        if (pctDiff > 0 && timeRange > 0) {
+            const msPerPct = timeRange / pctDiff;
+            const estMsRemaining = msPerPct * last.percentage;
+            drainBadge = `<div class="drain-badge drain-active" title="Based on current usage rate"><span class="drain-icon">🔥</span> Empty in ${this._fmtDuration(estMsRemaining)}</div>`;
+        } else if (pctDiff === 0 && last.percentage < 100) {
+            drainBadge = `<div class="drain-badge drain-stable"><span class="drain-icon">✨</span> Stable Usage</div>`;
+        }
+
         const hoursAgo = Math.round(timeRange / 3600000);
-        const label = hoursAgo > 0 ? `📈 ${hoursAgo}h trend · ${history.length} data points` : `📈 Recent trend · ${history.length} pts`;
+        const label = hoursAgo > 0 ? `📈 ${hoursAgo}h trend · ${history.length} pts` : `📈 Recent trend · ${history.length} pts`;
 
         return `<div class="sparkline-wrap">
             <div class="chart-container">
+                ${drainBadge}
                 <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
                     ${gridLines}
                     <polygon class="chart-area" points="${areaPoints}" fill="${color}"/>
@@ -390,5 +551,14 @@ setTimeout(() => {
     private _fmtNum(n: number): string {
         if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
         return n.toString();
+    }
+
+    private _fmtDuration(ms: number): string {
+        if (ms <= 0) return '0m';
+        const m = Math.floor(ms / 60000);
+        if (m < 60) return m + 'm';
+        const h = Math.floor(m / 60);
+        const mm = m % 60;
+        return `${h}h ${mm}m`;
     }
 }

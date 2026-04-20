@@ -57,6 +57,14 @@ export class QuotaManager {
 
     constructor(private context: vscode.ExtensionContext) {
         this.loadData();
+
+        this.context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('agq.refreshInterval')) {
+                if (this.pollingInterval) {
+                    this.restartPolling();
+                }
+            }
+        }));
     }
 
     public async startTracking() {
@@ -65,10 +73,22 @@ export class QuotaManager {
         this.applyOptimisticIfExpired();
 
         await this.fetchLocalApis();
-        this.pollingInterval = setInterval(() => this.fetchLocalApis(), 15000);
+        this.restartPolling();
+    }
+
+    private restartPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+        }
+        const config = vscode.workspace.getConfiguration('agq');
+        const intervalSecs = config.get<number>('refreshInterval', 15);
+        this.pollingInterval = setInterval(() => this.fetchLocalApis(), intervalSecs * 1000);
     }
 
     private applyOptimisticIfExpired() {
+        const config = vscode.workspace.getConfiguration('agq');
+        if (!config.get<boolean>('enableOptimisticReset', true)) return;
+
         const now = Date.now();
         let anyExpired = false;
 
@@ -153,22 +173,27 @@ export class QuotaManager {
         this.resetTimer = setTimeout(async () => {
             this.resetTimer = null;
 
-            // Optimistically set expired models to 100% immediately
-            const resetNow = Date.now();
-            for (const acc of Object.values(this.data.accounts)) {
-                for (const model of acc.models) {
-                    if (model.resetTimestamp > 0 && model.resetTimestamp <= resetNow) {
-                        model.percentage = 100;
-                        model.resetIn = 'Available';
-                        model.isOptimistic = true;  // mark as pending API confirmation
+            const config = vscode.workspace.getConfiguration('agq');
+            const enableOptimistic = config.get<boolean>('enableOptimisticReset', true);
+
+            if (enableOptimistic) {
+                // Optimistically set expired models to 100% immediately
+                const resetNow = Date.now();
+                for (const acc of Object.values(this.data.accounts)) {
+                    for (const model of acc.models) {
+                        if (model.resetTimestamp > 0 && model.resetTimestamp <= resetNow) {
+                            model.percentage = 100;
+                            model.resetIn = 'Available';
+                            model.isOptimistic = true;  // mark as pending API confirmation
+                        }
                     }
                 }
-            }
-            // Fire UI update immediately so panels show 100% + syncing indicator
-            this.onChange.fire(this.data);
+                // Fire UI update immediately so panels show 100% + syncing indicator
+                this.onChange.fire(this.data);
 
-            // Hold optimistic state for at least 2s so the syncing indicator is visible
-            await new Promise(r => setTimeout(r, 2000));
+                // Hold optimistic state for at least 2s so the syncing indicator is visible
+                await new Promise(r => setTimeout(r, 2000));
+            }
             await this.fetchLocalApis();   // then fetch real data (clears isOptimistic)
         }, delay);
     }

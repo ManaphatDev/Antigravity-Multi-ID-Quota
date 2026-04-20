@@ -7,7 +7,7 @@
 ![License](https://img.shields.io/badge/license-MIT-success)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blueviolet)
 
-> 💡 **New in v1.1.0:** Dashboard Theme Switcher (Classic / VS Code / Vibrant), Usage Sparkline Graphs, Smart Notifications with customizable sound, and full Cross-Platform Support (Linux & macOS)!
+> 💡 **New in v1.1.4:** In-Dashboard Custom Palette Color Pickers with Live-Preview, Predictive Drain Rate Badges, Dynamic Polling Intervals, and persistent Dashboard Themes!
 
 ---
 
@@ -30,6 +30,11 @@ Keep track of the models you care about the most:
 
 - **Pin from Sidebar:** Click the star icon (☆ / ★) next to any model.
 - **Smart Status Bar:** Pinned models instantly appear in the bottom-right Status Bar.
+  
+  <div align="center">
+    <img src="media/statusbar.png" alt="Status Bar Screenshot" width="500" />
+  </div>
+
 - **Clean Naming:** Model names are intelligently shortened (e.g., `Gemini 3.1 Pro (High)` → `Pro (High)`).
 - **Color-Coded Status:** ✅ Green (≥ 50%) · ⚠️ Yellow (20-49%) · ❌ Red (< 20%)
 - **Dynamic Reordering:** Pinned models move to a dedicated "📌 PINNED" section at the top.
@@ -37,7 +42,7 @@ Keep track of the models you care about the most:
 ### 📊 Multi-Account Dashboard
 
 <div align="center">
-  <img src="media/dashboard.png" alt="Dashboard Screenshot" width="700" />
+  <img src="media/dashboard-custom.png" alt="Dashboard Custom Theme" width="800" />
 </div>
 
 - Supports **multiple accounts simultaneously** — each account gets its own tab.
@@ -45,14 +50,29 @@ Keep track of the models you care about the most:
 - Shows raw **tier name** directly from the API (e.g., `TEAMS_TIER_PRO`, `Google AI Pro`).
 - Displays **reset time** countdowns per model.
 
-### 🎨 Dashboard Themes & Animations (New!)
+### 🎨 Dashboard Themes & Animations
 Switch between three visual styles via the theme switcher in the dashboard:
+
+<div align="center">
+  <img src="media/dashboard-classic.png" alt="Classic Theme" width="31%" style="margin-right: 1.5%;" />
+  <img src="media/dashboard-native.png" alt="VS Code Native Theme" width="31%" style="margin-right: 1.5%;" />
+  <img src="media/dashboard-vibrant.png" alt="Vibrant Theme" width="31%" />
+</div>
+<br/>
+
 - 🌙 **Classic Dark** — Sleek purple-toned premium design
 - 🖥️ **VS Code Native** — Follows your active VS Code theme automatically
 - ✨ **Vibrant** — Bold neon blue-green tones for maximum visibility
+- 🎨 **Custom (NEW)** — Build your own dashboard theme using the integrated native **Color Picker Palette**. Offers real-time **live-previews** as you drag the cursor, and permanently saves your design!
+  
+  <div align="center">
+    <img src="media/palette-horizontal.png" alt="Custom Palette Editor" width="400" />
+  </div>
+
 - 💫 **Smooth Loading Animations** — Circular gauges organically fill from 0% when opening the dashboard
 
-### 📊 Usage Analytics & Enhanced Chart (New!)
+### 📊 Usage Analytics & Enhanced Chart
+- **Predictive Analytics (NEW):** Sleek badges intelligently calculate linear usage trends from your 24-hour buffer to display your estimated drain rate (`🔥 Empty in XXm` or `✨ Stable Usage`).
 - **Full-size chart** (80px) with grid lines at 0%, 50%, 100% and Y-axis labels
 - **Data point dots** and **time axis** for easy reading
 - 24-hour usage trend tracking with smart data recording
@@ -119,6 +139,9 @@ Then install the generated `.vsix` file.
 |---|---|---|
 | `agq.enableNotifications` | `true` | Enable/disable quota alerts when running low or after reset |
 | `agq.notificationWarningThreshold` | `20` | Percentage below which a warning notification is triggered |
+| `agq.refreshInterval` | `15` | Polling interval in seconds for fetching quota data. Changes apply immediately. |
+| `agq.enableOptimisticReset` | `true` | Optimistically predict resets to 100% locally when reset time is reached. |
+| `agq.dashboardTheme` | `classic` | Persisted default UI theme for the Quota Dashboard. |
 
 ---
 

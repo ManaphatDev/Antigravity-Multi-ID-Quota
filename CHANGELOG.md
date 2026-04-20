@@ -4,6 +4,27 @@ All notable changes to **Antigravity Multi-ID Quota** will be documented in this
 
 ---
 
+## [1.1.4] — 2026-04-20
+
+### ✨ New Features
+
+#### 🎨 Fully Customizable UI Framework
+- Introduced **In-Dashboard Color Pickers**: Modifying your "🎨 Custom" theme is now done via a beautifully integrated native palette directly within the Dashboard.
+- **Real-Time Live Previews**: Adjusting a color via the palette instantly updates the dashboard components without refreshing — allowing true what-you-see-is-what-you-get design.
+- **Persistent Theme Preferences**: The dashboard now permanently remembers your active theme and custom color palette across VS Code restarts.
+
+#### 📉 Predictive Drain Rate Analytics
+- Added sleek, glassmorphic **Predictive Usage Badges** directly hovering on the sparkline charts.
+- The extension calculates linear usage trends from your 24-hour buffer and provides predictive metrics like `🔥 Empty in 45m` or `✨ Stable Usage` depending on your usage velocity.
+- Redesigned the reset timer format to `⏱️ Resets in X` to prevent icon confusion with the new drain rate badge.
+
+#### ⏱ Dynamic Settings Configuration
+- **Customizable Refresh Interval**: You can now define how frequently the extension polls for quota data using the `agq.refreshInterval` setting (e.g. adjust from 15s down to 5s or up to 60s).
+- Configuration changes to the refresh interval apply immediately without needing to restart the IDE.
+- Added `agq.enableOptimisticReset` toggle to optionally disable local reset predictions.
+
+---
+
 ## [1.1.3] — 2026-04-16
 
 ### ✨ New Features
