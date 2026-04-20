@@ -32,7 +32,7 @@ Keep track of the models you care about the most:
 - **Smart Status Bar:** Pinned models instantly appear in the bottom-right Status Bar.
   
   <div align="center">
-    <img src="media/statusbar.png" alt="Status Bar Screenshot" width="500" />
+    <img src="https://raw.githubusercontent.com/ManaphatDev/Antigravity-Multi-ID-Quota/main/media/statusbar.png" alt="Status Bar Screenshot" width="500" />
   </div>
 
 - **Clean Naming:** Model names are intelligently shortened (e.g., `Gemini 3.1 Pro (High)` → `Pro (High)`).
@@ -42,7 +42,7 @@ Keep track of the models you care about the most:
 ### 📊 Multi-Account Dashboard
 
 <div align="center">
-  <img src="media/dashboard-custom.png" alt="Dashboard Custom Theme" width="800" />
+  <img src="https://raw.githubusercontent.com/ManaphatDev/Antigravity-Multi-ID-Quota/main/media/dashboard-classic.png" alt="Dashboard Classic Theme" width="800" />
 </div>
 
 - Supports **multiple accounts simultaneously** — each account gets its own tab.
@@ -54,9 +54,9 @@ Keep track of the models you care about the most:
 Switch between three visual styles via the theme switcher in the dashboard:
 
 <div align="center">
-  <img src="media/dashboard-classic.png" alt="Classic Theme" width="31%" style="margin-right: 1.5%;" />
-  <img src="media/dashboard-native.png" alt="VS Code Native Theme" width="31%" style="margin-right: 1.5%;" />
-  <img src="media/dashboard-vibrant.png" alt="Vibrant Theme" width="31%" />
+  <img src="https://raw.githubusercontent.com/ManaphatDev/Antigravity-Multi-ID-Quota/main/media/dashboard-custom.png" alt="Dashboard Custom Theme" width="31%" style="margin-right: 1.5%;" />
+  <img src="https://raw.githubusercontent.com/ManaphatDev/Antigravity-Multi-ID-Quota/main/media/dashboard-native.png" alt="VS Code Native Theme" width="31%" style="margin-right: 1.5%;" />
+  <img src="https://raw.githubusercontent.com/ManaphatDev/Antigravity-Multi-ID-Quota/main/media/dashboard-vibrant.png" alt="Vibrant Theme" width="31%" />
 </div>
 <br/>
 
@@ -66,7 +66,7 @@ Switch between three visual styles via the theme switcher in the dashboard:
 - 🎨 **Custom (NEW)** — Build your own dashboard theme using the integrated native **Color Picker Palette**. Offers real-time **live-previews** as you drag the cursor, and permanently saves your design!
   
   <div align="center">
-    <img src="media/palette-horizontal.png" alt="Custom Palette Editor" width="400" />
+    <img src="https://raw.githubusercontent.com/ManaphatDev/Antigravity-Multi-ID-Quota/main/media/palette-horizontal.png" alt="Custom Palette Editor" width="400" />
   </div>
 
 - 💫 **Smooth Loading Animations** — Circular gauges organically fill from 0% when opening the dashboard
