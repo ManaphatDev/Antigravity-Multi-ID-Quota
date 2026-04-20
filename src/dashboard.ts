@@ -312,6 +312,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',-apple-system,B
 .color-group label {
     font-size: 9px; font-weight: 700; color: var(--tx2); 
     text-transform: uppercase; letter-spacing: 0.8px;
+    white-space: nowrap; text-align: center;
 }
 .color-picker {
     -webkit-appearance: none;
